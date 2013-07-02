@@ -37,12 +37,42 @@ def fnv_1a_b(digest):
 
 
 class BloomFilter(object):
-    pass
+    def __init__(self, m, k):
+        self.m = m
+        self.k = k
+        n = m/32 + (1 if m%32 else 0)
+        self.buckets = [0] * n
+        self._locations = [0] * k
+
+    def locations(self, value):
+        r = self._locations
+        a = fnv_1a(value)
+        b = fnv_1a_b(a)
+        x = a % self.m
+        for i in range(self.k):
+            r[i] = (x + self.m) if x < 0 else x
+            x = (x + b) % self.m
+        return r
+
+    def add(self, value):
+        l = self.locations(value)
+        for i in range(self.k):
+            self.buckets[l[i]/32] |= 1 << (l[i] % 32)
+
+    def test(self, value):
+        l = self.locations(value)
+        for i in range(self.k):
+            b = l[i]
+            if (self.buckets[b/32] & (1 << (b % 32))) == 0:
+                return False
+        return True
 
 
 if __name__ == "__main__":
-    print fnv_1a("tumi")
-    print fnv_1a("")
+    bloom = BloomFilter(32, 16)
+    bloom.add("foo")
+    bloom.add("bar")
 
-    print fnv_1a_b(fnv_1a("tumi"))
-    print fnv_1a_b(fnv_1a(""))
+    print bloom.test("foo")
+    print bloom.test("bar")
+    print bloom.test("blah")
