@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""Port of bloomfilter-test.js"""
 import unittest
 from pybloomfilterjs import BloomFilter
 
